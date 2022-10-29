@@ -1,3 +1,4 @@
+import { service } from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -19,12 +20,15 @@ import {
 } from '@loopback/rest';
 import {Cliente} from '../models';
 import {ClienteRepository} from '../repositories';
+import { AutentificacionService } from '../services';
 
 export class ClienteController {
   constructor(
     @repository(ClienteRepository)
     public clienteRepository : ClienteRepository,
-  ) {}
+    @service(AutentificacionService)
+    public servicioAutentificacion:AutentificacionService,
+    ) {}
 
   @post('/clientes')
   @response(200, {
@@ -44,8 +48,14 @@ export class ClienteController {
     })
     cliente: Omit<Cliente, 'id'>,
   ): Promise<Cliente> {
+    const claveGenerada = this.servicioAutentificacion.generarClaveUsuario();
+    console.log("La clave generada es  : " + claveGenerada);
+    const cifradoClave = this.servicioAutentificacion.cifradoClave(claveGenerada);
+    console.log("La clave cifrada es  : " + cifradoClave);
+    cliente.Clave=cifradoClave;
     return this.clienteRepository.create(cliente);
   }
+
 
   @get('/clientes/count')
   @response(200, {
@@ -55,6 +65,8 @@ export class ClienteController {
   async count(
     @param.where(Cliente) where?: Where<Cliente>,
   ): Promise<Count> {
+
+
     return this.clienteRepository.count(where);
   }
 
