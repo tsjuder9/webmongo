@@ -5,3 +5,8 @@ export * from './factura-producto.controller';
 export * from './factura-empleados.controller';
 export * from './factura-cliente.controller';
 export * from './restaurante-factura.controller';
+export * from './cliente.controller';
+export * from './empleado.controller';
+export * from './facturas.controller';
+export * from './productos.controller';
+export * from './restaurante.controller';
