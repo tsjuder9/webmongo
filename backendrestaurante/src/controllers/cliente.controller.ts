@@ -17,10 +17,13 @@ import {
   del,
   requestBody,
   response,
+  HttpErrors,
 } from '@loopback/rest';
-import {Cliente} from '../models';
+import fetch from 'node-fetch';
+import {Cliente, Credenciales} from '../models';
 import {ClienteRepository} from '../repositories';
 import { AutentificacionService } from '../services';
+const fecth=require("node-fetch");
 
 export class ClienteController {
   constructor(
@@ -29,6 +32,35 @@ export class ClienteController {
     @service(AutentificacionService)
     public servicioAutentificacion:AutentificacionService,
     ) {}
+
+  
+@post("/identificarClientes",{
+  responses:{
+    '200':{
+      description: "Identificacion de usuarios"
+    }
+  }
+})
+async identificarCliente(
+  @requestBody() credenciales: Credenciales
+){
+  let c=await this.servicioAutentificacion.IdentificarPersona(credenciales.usuario,credenciales.clave);
+    }
+  if (c){
+    let token=this.servicioAutentificacion.GenerarTokenJWT(c);
+    return {
+      datos:{
+        nombre:c.nombres,
+        correo: c.correo,
+        id:c.id
+      },
+      tk:token
+
+  }else{
+    throw new HttpErrors[401]("Datos invalidos");
+  }
+}
+
 
   @post('/clientes')
   @response(200, {
@@ -53,7 +85,21 @@ export class ClienteController {
     const cifradoClave = this.servicioAutentificacion.cifradoClave(claveGenerada);
     console.log("La clave cifrada es  : " + cifradoClave);
     cliente.Clave=cifradoClave;
+    
+
+    //Notificar al usuario
+    let destino:cliente.correo;
+    let asunto:'Registro plataforma';
+    let contenido='Hola ${cliente.Nombre}, su nombre de ususario es: ${cliente.correo} y su contraseña es: ${clave}';
+    fetch('http://127.0.0.1:5000/envio-correo?destino=${destino}$asunto=${asunto}&contenido=${contenido}')
+    .then((data:any)=>{
+      console.log(data);
+    })
+
     return this.clienteRepository.create(cliente);
+
+
+
   }
 
 
