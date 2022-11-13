@@ -21,6 +21,9 @@ import {
 } from '../models';
 import {FacturaRepository} from '../repositories';
 
+
+
+
 export class FacturaClienteController {
   constructor(
     @repository(FacturaRepository) protected facturaRepository: FacturaRepository,

@@ -19,7 +19,9 @@ import {
 } from '@loopback/rest';
 import {Factura} from '../models';
 import {FacturaRepository} from '../repositories';
+import {authenticate} from '@loopback/authentication';
 
+@authenticate("admin")
 export class FacturasController {
   constructor(
     @repository(FacturaRepository)

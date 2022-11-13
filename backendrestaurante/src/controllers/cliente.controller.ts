@@ -19,11 +19,12 @@ import {
   response,
   HttpErrors,
 } from '@loopback/rest';
-import fetch from 'node-fetch';
+import { llaves } from '../config/llaves';
+import fetch from 'node-fetch'
 import {Cliente, Credenciales} from '../models';
 import {ClienteRepository} from '../repositories';
 import { AutentificacionService } from '../services';
-const fecth=require("node-fetch");
+
 
 export class ClienteController {
   constructor(
@@ -44,19 +45,19 @@ export class ClienteController {
 async identificarCliente(
   @requestBody() credenciales: Credenciales
 ){
-  let c=await this.servicioAutentificacion.IdentificarPersona(credenciales.usuario,credenciales.clave);
-    }
-  if (c){
-    let token=this.servicioAutentificacion.GenerarTokenJWT(c);
+  let cli= await this.servicioAutentificacion.IdentificarPersona(credenciales.usuario,credenciales.clave);
+    
+  if (cli){
+    let token=this.servicioAutentificacion.GenerarTokenJWT(cli);
     return {
       datos:{
-        nombre:c.nombres,
-        correo: c.correo,
-        id:c.id
+        nombre:cli.Nombre,
+        correo: cli.correo,
+        id:cli.Id
       },
       tk:token
-
-  }else{
+       }
+    }else{
     throw new HttpErrors[401]("Datos invalidos");
   }
 }
@@ -80,23 +81,21 @@ async identificarCliente(
     })
     cliente: Omit<Cliente, 'id'>,
   ): Promise<Cliente> {
-    const claveGenerada = this.servicioAutentificacion.generarClaveUsuario();
-    console.log("La clave generada es  : " + claveGenerada);
-    const cifradoClave = this.servicioAutentificacion.cifradoClave(claveGenerada);
-    console.log("La clave cifrada es  : " + cifradoClave);
-    cliente.Clave=cifradoClave;
     
+    let clave= this.servicioAutentificacion.generarClaveUsuario();
+    let claveCifrada=this.servicioAutentificacion.cifradoClave(clave);
+    cliente.Clave=claveCifrada;
+    let clien=await this.clienteRepository.create(cliente);
 
     //Notificar al usuario
-    let destino:cliente.correo;
-    let asunto:'Registro plataforma';
-    let contenido='Hola ${cliente.Nombre}, su nombre de ususario es: ${cliente.correo} y su contraseña es: ${clave}';
-    fetch('http://127.0.0.1:5000/envio-correo?destino=${destino}$asunto=${asunto}&contenido=${contenido}')
-    .then((data:any)=>{
-      console.log(data);
-    })
-
-    return this.clienteRepository.create(cliente);
+    let destino=clien.correo;
+    let asunto='Registro en la plataforma plataforma';
+    let contenido=`Hola ${clien.Nombre}, su nombre de ususario es: ${clien.correo} y su contraseña es: ${clave}`;
+    fetch(`${llaves.urlServicioNotificaciones}envio-correo?correo_destino=${destino}&asunto=${asunto}&contenido=${contenido}`)
+      .then((data:any)=>{
+        console.log(data);
+      })
+    return clien;
 
 
 

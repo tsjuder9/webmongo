@@ -29,6 +29,13 @@ export class Cliente extends Entity {
 
   @property({
     type: 'string',
+    required: true,
+  })
+  correo: string;
+  
+  
+  @property({
+    type: 'string',
   })
   restauranteId?: string;
 
